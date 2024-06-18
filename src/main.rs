@@ -4,6 +4,7 @@ use std::path::Path;
 
 use clap::Parser;
 use colored::*;
+use num_format::{Locale, ToFormattedString};
 
 mod can_be_deleted;
 mod emptydir;
@@ -26,7 +27,10 @@ fn main() -> Result<(), std::io::Error> {
         0 => println!("{}", "No empty directories found".blue()),
         1 => println!("{}", "1 directory deleted".green()),
         _ => {
-            let message = format!("{} directories deleted", count_deleted);
+            let message = format!(
+                "{} directories deleted",
+                count_deleted.to_formatted_string(&Locale::en)
+            );
             println!("{}", message.green());
         }
     }
