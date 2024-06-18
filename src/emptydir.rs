@@ -29,3 +29,139 @@ pub fn emptydir(root: &Path) -> u32 {
 
     count_deleted
 }
+
+#[cfg(test)]
+mod emptydir_tests {
+    use std::fs;
+    use std::path::{Path, PathBuf};
+
+    use crate::emptydir::emptydir;
+
+    fn test_dir() -> PathBuf {
+        let tmp_dir = tempdir::TempDir::new("testing").unwrap();
+        let path = tmp_dir.path();
+        path.to_owned()
+    }
+
+    fn create_dir(dir: &PathBuf) {
+        fs::create_dir_all(dir).unwrap();
+    }
+
+    fn create_file(path: PathBuf) {
+        create_dir(&path.parent().unwrap().to_path_buf());
+        fs::write(&path, "this file is for testing").unwrap();
+    }
+
+    #[test]
+    fn it_doesnt_delete_my_do_not_backup() {
+        let dir = Path::new("/Users/alexwlchan/Desktop/do not back up");
+        assert_eq!(emptydir(dir), 0);
+    }
+
+    #[test]
+    fn it_doesnt_delete_a_non_existent_directory() {
+        let dir = Path::new("/does/not/exist");
+        assert_eq!(emptydir(dir), 0);
+    }
+
+    #[test]
+    fn it_deletes_an_empty_dir() {
+        let dir = test_dir();
+
+        // Create the directory, but don't put anything in it
+        create_dir(&dir);
+
+        assert_eq!(emptydir(&dir), 1);
+        assert_eq!(dir.exists(), false);
+    }
+
+    #[test]
+    fn it_ignores_a_dir_with_extra_entries() {
+        let dir = test_dir();
+
+        // Create the directory, then add a text file
+        create_dir(&dir);
+
+        create_file(dir.join("greeting.txt"));
+
+        assert_eq!(emptydir(&dir), 0);
+        assert_eq!(dir.exists(), true);
+        assert_eq!(dir.join("greeting.txt").exists(), true);
+    }
+
+    #[test]
+    fn it_deletes_a_dir_with_only_safe_to_delete_entries() {
+        let dir = test_dir();
+
+        //    .
+        //    ├─ .venv/
+        //    │   └─ bin/
+        //    │       └─ mypython.py
+        //    │
+        //    ├─ __pycache__
+        //    │   └─ myfile.pyc
+        //    │
+        //    └─ .DS_Store
+        //
+        create_dir(&dir);
+
+        create_dir(&dir.join(".venv"));
+        create_file(dir.join(".venv/bin/mypython.py"));
+
+        create_dir(&dir.join("__pycache__"));
+        create_file(dir.join("__pycache__/myfile.pyc"));
+
+        create_file(dir.join(".DS_Store"));
+
+        assert_eq!(emptydir(&dir), 1);
+        assert_eq!(dir.exists(), false);
+    }
+
+    #[test]
+    fn it_ignores_a_dir_with_a_mix_of_safe_and_unsafe_entries() {
+        let dir = test_dir();
+
+        create_dir(&dir);
+
+        create_file(dir.join(".DS_Store"));
+        create_file(dir.join("greeting.txt"));
+
+        assert_eq!(emptydir(&dir), 0);
+        assert_eq!(dir.exists(), true);
+    }
+
+    #[test]
+    fn it_deletes_a_subdir_with_only_safe_to_delete_entries() {
+        let dir = test_dir();
+        let subdir = dir.join("subdir");
+
+        //    .
+        //    ├─ subdir/
+        //    │   ├─ .venv/
+        //    │   │   └─ bin/
+        //    │   │       └─ mypython.py
+        //    │   │
+        //    │   ├─ __pycache__
+        //    │   │   └─ myfile.pyc
+        //    │   │
+        //    │   └─ .DS_Store
+        //    │
+        //    └─ greeting.txt
+        //
+        create_dir(&subdir);
+
+        create_dir(&subdir.join(".venv"));
+        create_file(subdir.join(".venv/bin/mypython.py"));
+
+        create_dir(&subdir.join("__pycache__"));
+        create_file(subdir.join("__pycache__/myfile.pyc"));
+
+        create_file(subdir.join(".DS_Store"));
+
+        create_file(dir.join("greeting.txt"));
+
+        assert_eq!(emptydir(&dir), 1);
+        assert_eq!(dir.exists(), true);
+        assert_eq!(subdir.exists(), false);
+    }
+}
