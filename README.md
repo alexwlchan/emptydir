@@ -42,7 +42,7 @@ $ emptydir ~/Desktop
 
 It will print the path to every empty directory that it deletes:
 
-```
+```console
 $ mkdir -p ~/Desktop/foo/bar/baz
 $ emptydir ~/Desktop/
 /Users/alexwlchan/Desktop/foo/bar/baz
