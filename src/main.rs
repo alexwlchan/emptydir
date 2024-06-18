@@ -1,5 +1,7 @@
 #![deny(warnings)]
 
+use std::fs;
+
 use colored::*;
 use walkdir::WalkDir;
 
@@ -16,8 +18,13 @@ fn main() -> Result<(), std::io::Error> {
     let mut count_deleted = 0;
 
     for entry in iterator {
-        println!("{}", entry.path().display());
-        count_deleted += 1;
+        match fs::remove_dir_all(entry.path()) {
+            Ok(_) => {
+                println!("{}", entry.path().display());
+                count_deleted += 1;
+            }
+            _ => (),
+        };
     }
 
     match count_deleted {
