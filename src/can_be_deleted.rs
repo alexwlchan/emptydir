@@ -54,7 +54,7 @@ pub fn can_be_deleted(path: &Path) -> bool {
 }
 
 #[cfg(test)]
-mod can_be_deleted_tests {
+mod test_can_be_deleted {
     use std::fs;
     use std::path::{Path, PathBuf};
 

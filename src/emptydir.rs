@@ -31,7 +31,7 @@ pub fn emptydir(root: &Path) -> u32 {
 }
 
 #[cfg(test)]
-mod emptydir_tests {
+mod test_emptydir {
     use std::fs;
     use std::path::{Path, PathBuf};
 
