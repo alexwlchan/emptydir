@@ -6,7 +6,26 @@ This tool looks for empty directories and deletes them.
 $ emptydir 
 ```
 
-More specifically, it deletes directories which are completely empty, or which only contain files/folders which I don't think are worth keeping (e.g. `.DS_Store`).
+More specifically, it deletes directories which are completely empty, or which only contain files/folders which I don't think are worth keeping (e.g. `.DS_Store` or `__pycache__`).
+
+
+
+
+
+## Why not use `find . -type d -empty -delete`?
+
+This command is the top answer on a [Unix Stack Exchange question](https://unix.stackexchange.com/a/107556/431830) about how to delete empty directories.
+
+The reason this isn't suitable is because it only deletes directories which are *completely* empty.
+But sometimes a directory can be non-empty, even if it appears empty.
+
+For example, this directory on macOS:
+
+<img src="totally_empty.png" alt="A Finder window for a folder 'totally_empty' which apparently contains no files.">
+
+I consider this directory to be empty, but it will be skipped by `find . -type d -empty -delete` because of the hidden [`.DS_Store` file](https://en.wikipedia.org/wiki/.DS_Store).
+
+This tool will delete directories which are empty or almost empty -- that is, when they only contain files or folders which I don't think are worth keeping, like `.DS_Store` or `__pycache__`.
 
 
 
