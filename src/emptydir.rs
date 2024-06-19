@@ -35,7 +35,7 @@ mod test_emptydir {
     use std::fs;
     use std::path::{Path, PathBuf};
 
-    use crate::emptydir::emptydir;
+    use super::*;
 
     fn test_dir() -> PathBuf {
         let tmp_dir = tempdir::TempDir::new("testing").unwrap();

@@ -58,7 +58,7 @@ mod test_can_be_deleted {
     use std::fs;
     use std::path::{Path, PathBuf};
 
-    use crate::can_be_deleted::can_be_deleted;
+    use super::*;
 
     fn test_dir() -> PathBuf {
         let tmp_dir = tempdir::TempDir::new("testing").unwrap();
