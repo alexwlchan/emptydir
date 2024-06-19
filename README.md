@@ -78,6 +78,22 @@ $ emptydir
 
 
 
+
+
+## Which files/folders are safe to delete?
+
+Currently the list of files/folders which I consider safe to delete is hard-coded in `can_be_deleted.rs`:
+
+*   `.DS_Store` stores some folder attributes used for showing the folder in the Finder, which I don't need to keep
+*   `__pycache__` is the bytecode cache in Python projects, which is pointless if the original Python files have been removed
+*   `.venv` is the name I use for virtual environments, which I can asily regenerate if necessary
+
+If you want to change that list, you need to modify the source code and compile a new version -- it's not a configurable setting.
+
+
+
+
+
 ## License
 
 MIT.
