@@ -12,9 +12,15 @@ More specifically, it deletes directories which are completely empty, or which o
 
 
 
-## Why not use `find . -type d -empty -delete`?
+## Why not use `find`?
 
-This command is the top answer on a [Unix Stack Exchange question](https://unix.stackexchange.com/a/107556/431830) about how to delete empty directories.
+Deleting empty directories is a common problem, and there's a suggestion on [Unix Stack Exchange question](https://unix.stackexchange.com/a/107556/431830):
+
+> Combining GNU find options and predicates, this command should do the job:
+>
+> ```
+> find . -type d -empty -delete
+> ```
 
 The reason this isn't suitable is because it only deletes directories which are *completely* empty.
 But sometimes a directory can be non-empty, even if it appears empty.
