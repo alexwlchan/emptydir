@@ -90,6 +90,9 @@ Currently the list of files/folders which I consider safe to delete is hard-code
 
 If you want to change that list, you need to modify the source code and compile a new version -- it's not a configurable setting.
 
+Note that these files will only be deleted if they are the only items in a folder.
+If, for example, a folder contains both `.DS_Store` and some text files, then nothing will be deleted.
+
 
 
 
