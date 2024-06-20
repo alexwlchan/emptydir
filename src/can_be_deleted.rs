@@ -1,18 +1,22 @@
 use std::collections::HashSet;
+use std::ffi::OsString;
 use std::fs;
 use std::io;
 use std::path::Path;
 
-/// Given a Result<DirEntry> from `fs::read_dir()`, try to get the
-/// filename of the entry.
+/// Return the names of files/folders inside a directory.
 ///
-/// Filenames will be lowercased for easy comparisons.
+/// Names are lowercased for easy comparisons.
 ///
-fn file_name(dir_entry: io::Result<fs::DirEntry>) -> Option<String> {
-    match dir_entry.map(|e| e.file_name().into_string()) {
-        Ok(Ok(s)) => Some(s.to_lowercase()),
-        _ => None,
+fn get_names_in_directory(dir: &Path) -> io::Result<HashSet<OsString>> {
+    let mut names = Vec::new();
+
+    for entry in fs::read_dir(dir)? {
+        let entry = entry?;
+        names.push(entry.file_name().to_ascii_lowercase());
     }
+
+    Ok(HashSet::from_iter(names))
 }
 
 pub fn can_be_deleted(path: &Path) -> bool {
@@ -38,18 +42,15 @@ pub fn can_be_deleted(path: &Path) -> bool {
     // A directory is safe to delete if the ONLY things it contains are these entries;
     // any other entry should block the directory from being deleted.
     //
-    let deletable_entries: HashSet<Option<String>> = [".DS_Store", "__pycache__", ".venv"]
-        .iter()
-        .map(|&s| Some(s.to_lowercase().to_owned()))
-        .collect();
+    let deletable_names = HashSet::from([
+        OsString::from(".ds_store"),
+        OsString::from("__pycache__"),
+        OsString::from(".venv"),
+    ]);
 
-    match fs::read_dir(path) {
-        Ok(entries) => {
-            let names: HashSet<Option<String>> = HashSet::from_iter(entries.map(|e| file_name(e)));
-
-            names.is_subset(&deletable_entries)
-        }
-        _ => false,
+    match get_names_in_directory(path) {
+        Ok(names) => names.is_subset(&deletable_names),
+        Err(_) => false,
     }
 }
 

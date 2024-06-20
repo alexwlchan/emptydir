@@ -8,7 +8,7 @@ use walkdir::WalkDir;
 /// Returns the number of directories deleted.
 ///
 pub fn emptydir(root: &Path) -> u32 {
-    let iterator = WalkDir::new(root)
+    let directories_to_delete = WalkDir::new(root)
         .contents_first(true)
         .into_iter()
         .filter_map(|e| e.ok())
@@ -17,13 +17,13 @@ pub fn emptydir(root: &Path) -> u32 {
 
     let mut count_deleted: u32 = 0;
 
-    for entry in iterator {
-        match fs::remove_dir_all(entry.path()) {
+    for dir in directories_to_delete {
+        match fs::remove_dir_all(dir.path()) {
             Ok(_) => {
-                println!("{}", entry.path().display());
+                println!("{}", dir.path().display());
                 count_deleted += 1;
             }
-            _ => (),
+            Err(_) => (),
         };
     }
 
