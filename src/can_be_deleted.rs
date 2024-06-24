@@ -49,6 +49,7 @@ pub fn can_be_deleted(path: &Path) -> bool {
     ]);
 
     match get_names_in_directory(path) {
+        Ok(names) if names.is_empty() => true,
         Ok(names) => names.is_subset(&deletable_names),
         Err(_) => false,
     }
