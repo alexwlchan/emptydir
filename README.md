@@ -101,6 +101,10 @@ If, for example, a folder contains both `.DS_Store` and some text files, then no
 
 
 
+## How it works
+
+For a detailed explanation of how this tool works, you can read [my accompanying article](https://alexwlchan.net/2024/emptydir/).
+
 
 
 ## License
