@@ -34,18 +34,20 @@ pub fn can_be_deleted(path: &Path) -> bool {
     //
     // *  .DS_Store stores some folder attributes used for showing the folder
     //    in the Finder, which I don't need to keep
-    // *  `__pycache__` is the bytecode cache in Python projects, which is
-    //    pointless if the original Python files have been removed
     // *  `.venv` is the name I use for virtual environments, which I can
     //    easily regenerate if necessary
+    // *  `__pycache__` is the bytecode cache in Python projects, which is
+    //    pointless if the original Python files have been removed
+    // *  `Thumbs.db` is a file that contains thumbnails on Windows systems
     //
     // A directory is safe to delete if the ONLY things it contains are these entries;
     // any other entry should block the directory from being deleted.
     //
     let deletable_names = HashSet::from([
         OsString::from(".ds_store"),
-        OsString::from("__pycache__"),
         OsString::from(".venv"),
+        OsString::from("__pycache__"),
+        OsString::from("thumbs.db"),
     ]);
 
     match get_names_in_directory(path) {
