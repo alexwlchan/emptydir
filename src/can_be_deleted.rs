@@ -47,6 +47,7 @@ pub fn can_be_deleted(path: &Path) -> bool {
         OsString::from(".ds_store"),
         OsString::from(".venv"),
         OsString::from("__pycache__"),
+        OsString::from("desktop.ini"),
         OsString::from("thumbs.db"),
     ]);
 
