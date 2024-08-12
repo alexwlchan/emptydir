@@ -4,7 +4,7 @@ version = "1.1.1"
 edition = "2021"
 
 [dependencies]
-clap = { version = "4.5.14", features = ["derive"] }
+clap = { version = "4.5.15", features = ["derive"] }
 colored = "2.1.0"
 num-format = "0.4.4"
 tempdir = "0.3.7"
