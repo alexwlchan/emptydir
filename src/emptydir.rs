@@ -94,6 +94,9 @@ mod test_emptydir {
         let dir = test_dir();
 
         //    .
+        //    ├─ .ipynb_checkpoints/
+        //    │   └─ analysis-checkpoint.ipynb
+        //    │
         //    ├─ .venv/
         //    │   └─ bin/
         //    │       └─ mypython.py
@@ -107,6 +110,9 @@ mod test_emptydir {
 
         create_dir(&dir.join(".venv"));
         create_file(dir.join(".venv/bin/mypython.py"));
+
+        create_dir(&dir.join(".ipynb_checkpoints"));
+        create_file(dir.join(".ipynb_checkpoints/analysis-checkpoint.ipynb"));
 
         create_dir(&dir.join("__pycache__"));
         create_file(dir.join("__pycache__/myfile.pyc"));

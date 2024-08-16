@@ -1,8 +1,12 @@
 # Changelog
 
+## v1.1.2 - 2024-08-16
+
+Delete empty folders which only contain an `.ipynb_checkpoints` folder.
+
 ## v1.1.1 - 2024-07-27
 
-Also delete empty folders which only contain a `desktop.ini` file.
+Delete empty folders which only contain a `desktop.ini` file.
 
 ## v1.1.0 - 2024-07-27
 
