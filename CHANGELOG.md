@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.2.0 - 2024-08-21
+
+Delete empty parent directories.
+
+If the target directory is the only entry in an otherwise empty directory, then the parent directory will also be deleted (and emptydir will keep going through parent directories until it finds one which is non-empty).
+
 ## v1.1.3 - 2024-08-21
 
 Delete empty folders which only contain a `.jekyll-cache` folder.
