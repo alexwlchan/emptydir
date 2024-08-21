@@ -47,7 +47,7 @@ mod test_emptydir {
         fs::create_dir_all(dir).unwrap();
     }
 
-    fn create_file(path: PathBuf) {
+    fn create_file(path: &PathBuf) {
         create_dir(&path.parent().unwrap().to_path_buf());
         fs::write(&path, "this file is for testing").unwrap();
     }
@@ -82,7 +82,7 @@ mod test_emptydir {
         // Create the directory, then add a text file
         create_dir(&dir);
 
-        create_file(dir.join("greeting.txt"));
+        create_file(&dir.join("greeting.txt"));
 
         assert_eq!(emptydir(&dir), 0);
         assert_eq!(dir.exists(), true);
@@ -109,15 +109,15 @@ mod test_emptydir {
         create_dir(&dir);
 
         create_dir(&dir.join(".venv"));
-        create_file(dir.join(".venv/bin/mypython.py"));
+        create_file(&dir.join(".venv/bin/mypython.py"));
 
         create_dir(&dir.join(".ipynb_checkpoints"));
-        create_file(dir.join(".ipynb_checkpoints/analysis-checkpoint.ipynb"));
+        create_file(&dir.join(".ipynb_checkpoints/analysis-checkpoint.ipynb"));
 
         create_dir(&dir.join("__pycache__"));
-        create_file(dir.join("__pycache__/myfile.pyc"));
+        create_file(&dir.join("__pycache__/myfile.pyc"));
 
-        create_file(dir.join(".DS_Store"));
+        create_file(&dir.join(".DS_Store"));
 
         assert_eq!(emptydir(&dir), 1);
         assert_eq!(dir.exists(), false);
@@ -129,8 +129,8 @@ mod test_emptydir {
 
         create_dir(&dir);
 
-        create_file(dir.join(".DS_Store"));
-        create_file(dir.join("greeting.txt"));
+        create_file(&dir.join(".DS_Store"));
+        create_file(&dir.join("greeting.txt"));
 
         assert_eq!(emptydir(&dir), 0);
         assert_eq!(dir.exists(), true);
@@ -157,14 +157,14 @@ mod test_emptydir {
         create_dir(&subdir);
 
         create_dir(&subdir.join(".venv"));
-        create_file(subdir.join(".venv/bin/mypython.py"));
+        create_file(&subdir.join(".venv/bin/mypython.py"));
 
         create_dir(&subdir.join("__pycache__"));
-        create_file(subdir.join("__pycache__/myfile.pyc"));
+        create_file(&subdir.join("__pycache__/myfile.pyc"));
 
-        create_file(subdir.join(".DS_Store"));
+        create_file(&subdir.join(".DS_Store"));
 
-        create_file(dir.join("greeting.txt"));
+        create_file(&dir.join("greeting.txt"));
 
         assert_eq!(emptydir(&dir), 1);
         assert_eq!(dir.exists(), true);
