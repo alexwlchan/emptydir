@@ -36,6 +36,9 @@ pub fn can_be_deleted(path: &Path) -> bool {
     //    in the Finder, which I don't need to keep
     // *  `.ipynb_checkpoints` is a folder used by Jupyter Notebooks, but not
     //    important if I've deleted the notebooks
+    // *  `.jekyll-cache` is a cache directory used by Jekyll sites, but
+    //    can be easily regenerated and will be rebuilt regularly as part
+    //    of the Jekyll build process
     // *  `.venv` is the name I use for virtual environments, which I can
     //    easily regenerate if necessary
     // *  `__pycache__` is the bytecode cache in Python projects, which is
@@ -48,6 +51,7 @@ pub fn can_be_deleted(path: &Path) -> bool {
     let deletable_names = HashSet::from([
         OsString::from(".ds_store"),
         OsString::from(".ipynb_checkpoints"),
+        OsString::from(".jekyll-cache"),
         OsString::from(".venv"),
         OsString::from("__pycache__"),
         OsString::from("desktop.ini"),

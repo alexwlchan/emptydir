@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.1.3 - 2024-08-21
+
+Delete empty folders which only contain a `.jekyll-cache` folder.
+
 ## v1.1.2 - 2024-08-16
 
 Delete empty folders which only contain an `.ipynb_checkpoints` folder.
