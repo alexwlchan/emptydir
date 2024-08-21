@@ -27,6 +27,26 @@ pub fn emptydir(root: &Path) -> u32 {
         };
     }
 
+    // Now work our way upward through the parent directories, and
+    // delete any of those which are empty.
+    let mut current_parent = root.parent();
+
+    while let Some(parent) = current_parent {
+        if crate::can_be_deleted::can_be_deleted(parent) {
+            match fs::remove_dir_all(parent) {
+                Ok(_) => {
+                    println!("{}", parent.display());
+                    count_deleted += 1;
+                }
+                Err(_) => (),
+            };
+
+            current_parent = parent.parent();
+        } else {
+            break;
+        }
+    }
+
     count_deleted
 }
 
