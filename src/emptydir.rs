@@ -133,7 +133,8 @@ mod test_emptydir {
         create_file(&dir.join("greeting.txt"));
 
         assert_eq!(emptydir(&dir), 0);
-        assert_eq!(dir.exists(), true);
+        assert!(dir.exists());
+        assert!(dir.join("greeting.txt").exists());
     }
 
     #[test]
@@ -169,5 +170,6 @@ mod test_emptydir {
         assert_eq!(emptydir(&dir), 1);
         assert_eq!(dir.exists(), true);
         assert_eq!(subdir.exists(), false);
+        assert!(dir.join("greeting.txt").exists());
     }
 }
