@@ -58,7 +58,7 @@ mod test_emptydir {
     use super::*;
 
     fn test_dir() -> PathBuf {
-        let tmp_dir = tempdir::TempDir::new("testing").unwrap();
+        let tmp_dir = tempfile::tempdir().unwrap();
         let path = tmp_dir.path();
         path.to_owned()
     }
