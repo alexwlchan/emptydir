@@ -3,7 +3,7 @@
 This tool looks for empty directories and deletes them.
 
 ```console
-$ emptydir 
+$ emptydir
 ```
 
 More specifically, it deletes directories which are completely empty, or which only contain files/folders which I don't think are worth keeping (e.g. `.DS_Store` or `__pycache__`).
