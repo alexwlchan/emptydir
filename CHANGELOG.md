@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.2.1 - 2024-12-01
+
+Don't delete the `.git` directory or any subdirectories.
+
+Messing with the internal structure `.git` can cause issues for Git, so just leave it as-is, even if it contains empty folders.
+
 ## v1.2.0 - 2024-08-21
 
 Delete empty parent directories.

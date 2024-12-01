@@ -19,6 +19,13 @@ fn get_names_in_directory(dir: &Path) -> io::Result<HashSet<OsString>> {
     Ok(HashSet::from_iter(names))
 }
 
+/// Returns True if this path any ancestor is a `.git` folder,
+/// False otherwise.
+pub fn is_in_git_folder(path: &Path) -> bool {
+    path.ancestors()
+        .any(|ancestor| ancestor.file_name().map_or(false, |name| name == ".git"))
+}
+
 pub fn can_be_deleted(path: &Path) -> bool {
     // This is a folder where I put files that I explicitly don't want
     // to include in my backups.
@@ -29,6 +36,24 @@ pub fn can_be_deleted(path: &Path) -> bool {
         Ok(p) if p == Path::new("/Users/alexwlchan/Desktop/do not back up") => return false,
         _ => (),
     };
+
+    // Don't delete subfolders of a `.git` directory.
+    //
+    // For example, if you delete `.git/refs`, then Git can't detect
+    // the Git directory any more.  Observe:
+    //
+    //     $ git init .
+    //     Initialized empty Git repository in tmp.bTrs8ZaWjc/.git/
+    //
+    //     $ rm -rf .git/refs
+    //
+    //     $ git status
+    //     fatal: not a git repository (or any of the parent directories): .git
+    //
+    // Skipping these folders is fine.
+    if is_in_git_folder(path) {
+        return false;
+    }
 
     // This is the list of entries which I consider safe to delete.
     //
@@ -155,5 +180,25 @@ mod test_can_be_deleted {
         create_file(path.join(".ds_store"));
 
         assert_eq!(can_be_deleted(&path), true);
+    }
+
+    #[test]
+    fn the_dot_git_folder_cannot_be_deleted() {
+        let path = test_dir();
+        let git_dir = path.join(".git");
+
+        create_dir(&git_dir);
+
+        assert_eq!(can_be_deleted(&git_dir), false);
+    }
+
+    #[test]
+    fn any_subdir_of_the_dot_git_folder_cannot_be_deleted() {
+        let path = test_dir();
+        let refs_dir = path.join(".git/refs");
+
+        create_dir(&refs_dir);
+
+        assert_eq!(can_be_deleted(&refs_dir), false);
     }
 }

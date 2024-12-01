@@ -3,7 +3,7 @@
 This tool looks for empty directories and deletes them.
 
 ```console
-$ emptydir 
+$ emptydir
 ```
 
 More specifically, it deletes directories which are completely empty, or which only contain files/folders which I don't think are worth keeping (e.g. `.DS_Store` or `__pycache__`).
@@ -90,9 +90,18 @@ $ emptydir
 
 Currently the list of files/folders which I consider safe to delete is hard-coded in `can_be_deleted.rs`:
 
-*   `.DS_Store` stores some folder attributes used for showing the folder in the Finder, which I don't need to keep
-*   `__pycache__` is the bytecode cache in Python projects, which is pointless if the original Python files have been removed
-*   `.venv` is the name I use for virtual environments, which I can asily regenerate if necessary
+*  .DS_Store stores some folder attributes used for showing the folder
+   in the Finder, which I don't need to keep
+*  `.ipynb_checkpoints` is a folder used by Jupyter Notebooks, but not
+   important if I've deleted the notebooks
+*  `.jekyll-cache` is a cache directory used by Jekyll sites, but
+   can be easily regenerated and will be rebuilt regularly as part
+   of the Jekyll build process
+*  `.venv` is the name I use for virtual environments, which I can
+   easily regenerate if necessary
+*  `__pycache__` is the bytecode cache in Python projects, which is
+   pointless if the original Python files have been removed
+*  `Thumbs.db` is a file that contains thumbnails on Windows systems
 
 If you want to change that list, you need to modify the source code and compile a new version -- it's not a configurable setting.
 
