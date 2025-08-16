@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.2.2 - 2025-08-16
+
+If `emptydir` tries to delete a directory but gets an error, it now prints that error to stderr. Previously the error would be silently ignored.
+
+This fixes a bug where emptydir could appear to do nothing -- it would report "no empty directories found", but actually it had found empty directories it was unable to delete.
+
 ## v1.2.1 - 2024-12-01
 
 Don't delete the `.git` directory or any subdirectories.

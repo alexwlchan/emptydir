@@ -21,15 +21,16 @@ fn main() -> Result<(), std::io::Error> {
     let cli = Cli::parse();
 
     let root = Path::new(&cli.root);
-    let count_deleted = emptydir::emptydir(root);
+    let result = emptydir::emptydir(root);
 
-    match count_deleted {
-        0 => println!("{}", "No empty directories found".blue()),
-        1 => println!("{}", "1 directory deleted".green()),
+    match (result.count_deleted, result.count_errors) {
+        (0, 0) => println!("{}", "No empty directories found".blue()),
+        (0, _) => println!("{}", "Unable to delete empty directories".red()),
+        (1, _) => println!("{}", "1 directory deleted".green()),
         _ => {
             let message = format!(
                 "{} directories deleted",
-                count_deleted.to_formatted_string(&Locale::en)
+                result.count_deleted.to_formatted_string(&Locale::en)
             );
             println!("{}", message.green());
         }
