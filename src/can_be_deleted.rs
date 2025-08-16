@@ -21,7 +21,7 @@ fn get_names_in_directory(dir: &Path) -> io::Result<HashSet<OsString>> {
 
 /// Returns True if this path any ancestor is a `.git` folder,
 /// False otherwise.
-pub fn is_in_git_folder(path: &Path) -> bool {
+fn is_in_git_folder(path: &Path) -> bool {
     path.ancestors()
         .any(|ancestor| ancestor.file_name().map_or(false, |name| name == ".git"))
 }
