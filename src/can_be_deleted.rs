@@ -21,7 +21,7 @@ fn get_names_in_directory(dir: &Path) -> io::Result<HashSet<OsString>> {
 
 /// Returns True if this path any ancestor is a `.git` folder,
 /// False otherwise.
-fn is_in_git_folder(path: &Path) -> bool {
+fn is_in_git_repository(path: &Path) -> bool {
     path.ancestors()
         .any(|ancestor| ancestor.file_name().map_or(false, |name| name == ".git"))
 }
@@ -51,7 +51,7 @@ pub fn can_be_deleted(path: &Path) -> bool {
     //     fatal: not a git repository (or any of the parent directories): .git
     //
     // Skipping these folders is fine.
-    if is_in_git_folder(path) {
+    if is_in_git_repository(path) {
         return false;
     }
 
