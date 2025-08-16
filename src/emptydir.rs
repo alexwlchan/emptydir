@@ -1,13 +1,20 @@
 use std::fs;
 use std::path::Path;
 
+use colored::*;
 use walkdir::WalkDir;
+
+#[derive(Debug, PartialEq)]
+pub struct EmptydirResult {
+    pub count_deleted: u32,
+    pub count_errors: u32,
+}
 
 /// Recurse through a given root directory, and delete any "empty" directories.
 ///
 /// Returns the number of directories deleted.
 ///
-pub fn emptydir(root: &Path) -> u32 {
+pub fn emptydir(root: &Path) -> EmptydirResult {
     let directories_to_delete = WalkDir::new(root)
         .contents_first(true)
         .into_iter()
@@ -16,6 +23,7 @@ pub fn emptydir(root: &Path) -> u32 {
         .filter(|e| crate::can_be_deleted::can_be_deleted(e.path()));
 
     let mut count_deleted: u32 = 0;
+    let mut count_errors: u32 = 0;
 
     for dir in directories_to_delete {
         match fs::remove_dir_all(dir.path()) {
@@ -23,7 +31,15 @@ pub fn emptydir(root: &Path) -> u32 {
                 println!("{}", dir.path().display());
                 count_deleted += 1;
             }
-            Err(_) => (),
+            Err(e) => {
+                let message = format!(
+                    "Tried to delete {}, but got error: {}",
+                    dir.path().display(),
+                    e
+                );
+                eprintln!("{}", message.red());
+                count_errors += 1;
+            }
         };
     }
 
@@ -32,22 +48,29 @@ pub fn emptydir(root: &Path) -> u32 {
     let mut current_parent = root.parent();
 
     while let Some(parent) = current_parent {
-        if crate::can_be_deleted::can_be_deleted(parent) {
-            match fs::remove_dir_all(parent) {
-                Ok(_) => {
-                    println!("{}", parent.display());
-                    count_deleted += 1;
-                }
-                Err(_) => (),
-            };
-
-            current_parent = parent.parent();
-        } else {
+        if !crate::can_be_deleted::can_be_deleted(parent) {
             break;
         }
+
+        match fs::remove_dir_all(parent) {
+            Ok(_) => {
+                println!("{}", parent.display());
+                count_deleted += 1;
+            }
+            Err(e) => {
+                let message = format!("Tried to delete {}, but got error: {}", parent.display(), e);
+                eprintln!("{}", message.red());
+                count_errors += 1;
+            }
+        };
+
+        current_parent = parent.parent();
     }
 
-    count_deleted
+    EmptydirResult {
+        count_deleted,
+        count_errors,
+    }
 }
 
 #[cfg(test)]
@@ -75,13 +98,25 @@ mod test_emptydir {
     #[test]
     fn it_doesnt_delete_my_do_not_backup() {
         let dir = Path::new("/Users/alexwlchan/Desktop/do not back up");
-        assert_eq!(emptydir(dir), 0);
+        assert_eq!(
+            emptydir(dir),
+            EmptydirResult {
+                count_deleted: 0,
+                count_errors: 0
+            }
+        );
     }
 
     #[test]
     fn it_doesnt_delete_a_non_existent_directory() {
         let dir = Path::new("/does/not/exist");
-        assert_eq!(emptydir(dir), 0);
+        assert_eq!(
+            emptydir(dir),
+            EmptydirResult {
+                count_deleted: 0,
+                count_errors: 0
+            }
+        );
     }
 
     #[test]
@@ -91,7 +126,13 @@ mod test_emptydir {
         // Create the directory, but don't put anything in it
         create_dir(&dir);
 
-        assert_eq!(emptydir(&dir), 1);
+        assert_eq!(
+            emptydir(&dir),
+            EmptydirResult {
+                count_deleted: 1,
+                count_errors: 0
+            }
+        );
         assert_eq!(dir.exists(), false);
     }
 
@@ -104,7 +145,13 @@ mod test_emptydir {
 
         create_file(&dir.join("greeting.txt"));
 
-        assert_eq!(emptydir(&dir), 0);
+        assert_eq!(
+            emptydir(&dir),
+            EmptydirResult {
+                count_deleted: 0,
+                count_errors: 0
+            }
+        );
         assert_eq!(dir.exists(), true);
         assert_eq!(dir.join("greeting.txt").exists(), true);
     }
@@ -139,7 +186,13 @@ mod test_emptydir {
 
         create_file(&dir.join(".DS_Store"));
 
-        assert_eq!(emptydir(&dir), 1);
+        assert_eq!(
+            emptydir(&dir),
+            EmptydirResult {
+                count_deleted: 1,
+                count_errors: 0
+            }
+        );
         assert_eq!(dir.exists(), false);
     }
 
@@ -152,7 +205,13 @@ mod test_emptydir {
         create_file(&dir.join(".DS_Store"));
         create_file(&dir.join("greeting.txt"));
 
-        assert_eq!(emptydir(&dir), 0);
+        assert_eq!(
+            emptydir(&dir),
+            EmptydirResult {
+                count_deleted: 0,
+                count_errors: 0
+            }
+        );
         assert!(dir.exists());
         assert!(dir.join("greeting.txt").exists());
     }
@@ -187,7 +246,13 @@ mod test_emptydir {
 
         create_file(&dir.join("greeting.txt"));
 
-        assert_eq!(emptydir(&dir), 1);
+        assert_eq!(
+            emptydir(&dir),
+            EmptydirResult {
+                count_deleted: 1,
+                count_errors: 0
+            }
+        );
         assert_eq!(dir.exists(), true);
         assert_eq!(subdir.exists(), false);
         assert!(dir.join("greeting.txt").exists());
