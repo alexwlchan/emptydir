@@ -24,7 +24,12 @@ fn main() -> Result<(), std::io::Error> {
     let result = emptydir::emptydir(root);
 
     match (result.count_deleted, result.count_errors) {
-        (0, 0) => println!("{}", "No empty directories found".blue()),
+        (0, 0) => match can_be_deleted::can_be_deleted(&root) {
+            can_be_deleted::DeleteDecision::CannotDelete(reason) => {
+                eprintln!("{}", reason.to_string().red());
+            }
+            _ => (),
+        },
         (0, _) => println!("{}", "Unable to delete empty directories".red()),
         (1, _) => println!("{}", "1 directory deleted".green()),
         _ => {

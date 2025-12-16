@@ -1,6 +1,7 @@
 use std::fs;
 use std::path::Path;
 
+use crate::can_be_deleted::DeleteDecision;
 use colored::*;
 use walkdir::WalkDir;
 
@@ -20,7 +21,12 @@ pub fn emptydir(root: &Path) -> EmptydirResult {
         .into_iter()
         .filter_map(|e| e.ok())
         .filter(|e| e.file_type().is_dir())
-        .filter(|e| crate::can_be_deleted::can_be_deleted(e.path()));
+        .filter(|e| {
+            matches!(
+                crate::can_be_deleted::can_be_deleted(e.path()),
+                DeleteDecision::CanDelete
+            )
+        });
 
     let mut count_deleted: u32 = 0;
     let mut count_errors: u32 = 0;
@@ -48,7 +54,10 @@ pub fn emptydir(root: &Path) -> EmptydirResult {
     let mut current_parent = root.parent();
 
     while let Some(parent) = current_parent {
-        if !crate::can_be_deleted::can_be_deleted(parent) {
+        if !matches!(
+            crate::can_be_deleted::can_be_deleted(parent),
+            DeleteDecision::CanDelete
+        ) {
             break;
         }
 
