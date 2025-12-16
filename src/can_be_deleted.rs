@@ -1,5 +1,6 @@
 use std::collections::HashSet;
 use std::ffi::OsString;
+use std::fmt;
 use std::fs;
 use std::io;
 use std::path::Path;
@@ -26,17 +27,56 @@ fn is_in_git_repository(path: &Path) -> bool {
         .any(|ancestor| ancestor.file_name().map_or(false, |name| name == ".git"))
 }
 
-pub fn can_be_deleted(path: &Path) -> bool {
-    // This is a folder where I put files that I explicitly don't want
-    // to include in my backups.
-    //
-    // It may sometimes be empty, but I never want to delete it.
-    // See https://overcast.fm/+R7DX9_W-Y/21:22 or my Obsidian note.
-    match path.canonicalize() {
-        Ok(p) if p == Path::new("/Users/alexwlchan/Desktop/do not back up") => return false,
-        _ => (),
-    };
+/// DeleteDecision describes whether a directory can be deleted.
+#[derive(Debug)]
+pub enum DeleteDecision {
+    CanDelete,
+    CannotDelete(Reason),
+}
 
+// Reason explains why a directory cannot be deleted.
+#[derive(Debug)]
+pub enum Reason {
+    NotEmpty(Vec<OsString>),
+    InGitRepository,
+    CannotListContents(io::Error),
+}
+
+impl fmt::Display for Reason {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Reason::NotEmpty(entries) => {
+                write!(
+                    f,
+                    "directory is not empty; contains {} entr{}:",
+                    entries.len(),
+                    if entries.len() == 1 { "y" } else { "ies" }
+                )?;
+
+                // Sort the entries for consistent output.
+                let mut sorted: Vec<_> = entries.iter().collect();
+                sorted.sort_by_key(|s| s.to_string_lossy());
+
+                for entry in sorted {
+                    write!(f, "\n  - {}", entry.to_string_lossy())?;
+                }
+
+                Ok(())
+            }
+
+            Reason::CannotListContents(err) => {
+                write!(f, "unable to list directory contents: {}", err)
+            }
+
+            Reason::InGitRepository => {
+                write!(f, "directory is inside a .git repository")
+            }
+        }
+    }
+}
+
+/// can_be_deleted checks whether a directory can be deleted.
+pub fn can_be_deleted(dir_path: &Path) -> DeleteDecision {
     // Don't delete subfolders of a `.git` directory.
     //
     // For example, if you delete `.git/refs`, then Git can't detect
@@ -51,8 +91,8 @@ pub fn can_be_deleted(path: &Path) -> bool {
     //     fatal: not a git repository (or any of the parent directories): .git
     //
     // Skipping these folders is fine.
-    if is_in_git_repository(path) {
-        return false;
+    if is_in_git_repository(dir_path) {
+        return DeleteDecision::CannotDelete(Reason::InGitRepository);
     }
 
     // This is the list of entries which I consider safe to delete.
@@ -83,10 +123,14 @@ pub fn can_be_deleted(path: &Path) -> bool {
         OsString::from("thumbs.db"),
     ]);
 
-    match get_names_in_directory(path) {
-        Ok(names) if names.is_empty() => true,
-        Ok(names) => names.is_subset(&deletable_names),
-        Err(_) => false,
+    match get_names_in_directory(dir_path) {
+        Ok(names) if names.is_subset(&deletable_names) => DeleteDecision::CanDelete,
+        Ok(names) => {
+            let remaining_entries: Vec<OsString> =
+                names.difference(&deletable_names).cloned().collect();
+            DeleteDecision::CannotDelete(Reason::NotEmpty(remaining_entries))
+        }
+        Err(e) => DeleteDecision::CannotDelete(Reason::CannotListContents(e)),
     }
 }
 
@@ -99,8 +143,8 @@ mod test_can_be_deleted {
 
     fn test_dir() -> PathBuf {
         let tmp_dir = tempfile::tempdir().unwrap();
-        let path = tmp_dir.path();
-        path.to_owned()
+        let dir_path = tmp_dir.path();
+        dir_path.to_owned()
     }
 
     fn create_dir(path: &PathBuf) {
@@ -112,93 +156,116 @@ mod test_can_be_deleted {
     }
 
     #[test]
-    fn it_doesnt_delete_my_do_not_backup() {
-        let path = Path::new("/Users/alexwlchan/Desktop/do not back up");
-        assert_eq!(can_be_deleted(&path), false);
-    }
-
-    #[test]
     fn a_dir_cant_be_deleted_if_we_cant_read_the_contents() {
-        let path = Path::new("/does/not/exist");
-        assert_eq!(can_be_deleted(&path), false);
+        let dir_path = Path::new("/does/not/exist");
+        assert!(matches!(
+            can_be_deleted(&dir_path),
+            DeleteDecision::CannotDelete(Reason::CannotListContents(_))
+        ));
     }
 
     #[test]
     fn an_empty_dir_can_be_deleted() {
-        let path = test_dir();
+        let dir_path = test_dir();
 
         // Create the directory, but don't put anything in it
-        create_dir(&path);
+        create_dir(&dir_path);
 
-        assert_eq!(can_be_deleted(&path), true);
+        assert!(matches!(
+            can_be_deleted(&dir_path),
+            DeleteDecision::CanDelete
+        ));
     }
 
     #[test]
     fn a_directory_with_extra_entries_cannot_be_deleted() {
-        let path = test_dir();
+        let dir_path = test_dir();
 
         // Create the directory, then add a text file
-        create_dir(&path);
+        create_dir(&dir_path);
 
-        create_file(path.join("greeting.txt"));
+        create_file(dir_path.join("greeting.txt"));
 
-        assert_eq!(can_be_deleted(&path), false);
+        match can_be_deleted(&dir_path) {
+            DeleteDecision::CannotDelete(Reason::NotEmpty(entries)) => {
+                assert_eq!(entries, vec![OsString::from("greeting.txt")]);
+            }
+            other => panic!("unexpected decision: {other:?}"),
+        }
     }
 
     #[test]
     fn a_directory_with_only_safe_to_delete_entries_can_be_deleted() {
-        let path = test_dir();
+        let dir_path = test_dir();
 
         // Create the directory, then add subdirectories
-        create_dir(&path);
+        create_dir(&dir_path);
 
-        create_dir(&path.join(".venv"));
-        create_dir(&path.join("__pycache__"));
-        create_file(path.join(".DS_Store"));
+        create_dir(&dir_path.join(".venv"));
+        create_dir(&dir_path.join("__pycache__"));
+        create_file(dir_path.join(".DS_Store"));
 
-        assert_eq!(can_be_deleted(&path), true);
+        assert!(matches!(
+            can_be_deleted(&dir_path),
+            DeleteDecision::CanDelete
+        ));
     }
 
     #[test]
     fn a_directory_with_mix_of_safe_and_unsafe_entries_cannot_be_deleted() {
-        let path = test_dir();
+        let dir_path = test_dir();
 
-        create_dir(&path);
+        create_dir(&dir_path);
 
-        create_file(path.join(".DS_Store"));
-        create_file(path.join("greeting.txt"));
+        create_file(dir_path.join(".DS_Store"));
+        create_file(dir_path.join("greeting.txt"));
 
-        assert_eq!(can_be_deleted(&path), false);
+        match can_be_deleted(&dir_path) {
+            DeleteDecision::CannotDelete(Reason::NotEmpty(entries)) => {
+                // `.DS_Store` is allowed, `greeting.txt` is not
+                assert_eq!(entries, vec![OsString::from("greeting.txt")]);
+            }
+            other => panic!("unexpected decision: {other:?}"),
+        }
     }
 
     #[test]
     fn safe_to_delete_entries_are_case_insensitive() {
-        let path = test_dir();
+        let dir_path = test_dir();
 
-        create_dir(&path);
+        create_dir(&dir_path);
 
-        create_file(path.join(".ds_store"));
+        create_file(dir_path.join(".ds_store"));
 
-        assert_eq!(can_be_deleted(&path), true);
+        assert!(matches!(
+            can_be_deleted(&dir_path),
+            DeleteDecision::CanDelete
+        ));
     }
 
     #[test]
     fn the_dot_git_folder_cannot_be_deleted() {
-        let path = test_dir();
-        let git_dir = path.join(".git");
+        let dir_path = test_dir();
+        let git_dir = dir_path.join(".git");
 
         create_dir(&git_dir);
 
-        assert_eq!(can_be_deleted(&git_dir), false);
+        assert!(matches!(
+            can_be_deleted(&git_dir),
+            DeleteDecision::CannotDelete(Reason::InGitRepository)
+        ));
     }
 
     #[test]
     fn any_subdir_of_the_dot_git_folder_cannot_be_deleted() {
-        let path = test_dir();
-        let refs_dir = path.join(".git/refs");
+        let dir_path = test_dir();
+        let refs_dir = dir_path.join(".git/refs");
 
         create_dir(&refs_dir);
 
-        assert_eq!(can_be_deleted(&refs_dir), false);
+        assert!(matches!(
+            can_be_deleted(&refs_dir),
+            DeleteDecision::CannotDelete(Reason::InGitRepository)
+        ));
     }
 }

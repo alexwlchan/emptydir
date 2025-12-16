@@ -1,5 +1,23 @@
 # Changelog
 
+## v1.3.0 - 2025-12-16
+
+If `emptydir` looks at a directory but there's a reason the directory can't be deleted, it now prints the reason.
+
+Example:
+
+```console
+$ emptydir ~/Desktop
+directory is not empty; contains 3 entries:
+  - makeup-tips.html
+  - paste_images.py
+  - Screenshot 2024-12-31 at 10.46.41.png
+```
+
+Previously, this would simply report "no empty directories found".
+
+This reason is only printed for the initial target of `emptydir`, if nothing can be deleted.
+
 ## v1.2.2 - 2025-08-16
 
 If `emptydir` tries to delete a directory but gets an error, it now prints that error to stderr. Previously the error would be silently ignored.
