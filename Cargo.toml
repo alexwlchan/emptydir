@@ -5,7 +5,7 @@ edition = "2021"
 
 [dependencies]
 clap = { version = "4.5.54", features = ["derive"] }
-colored = "3.0.0"
+colored = "3.1.1"
 num-format = "0.4.4"
 tempfile = "3"
 walkdir = "2"
