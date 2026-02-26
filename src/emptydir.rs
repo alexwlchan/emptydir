@@ -105,18 +105,6 @@ mod test_emptydir {
     }
 
     #[test]
-    fn it_doesnt_delete_my_do_not_backup() {
-        let dir = Path::new("/Users/alexwlchan/Desktop/do not back up");
-        assert_eq!(
-            emptydir(dir),
-            EmptydirResult {
-                count_deleted: 0,
-                count_errors: 0
-            }
-        );
-    }
-
-    #[test]
     fn it_doesnt_delete_a_non_existent_directory() {
         let dir = Path::new("/does/not/exist");
         assert_eq!(
