@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.3.1 - 2026-02-26
+
+`emptydir` can now clean up the current directory by running `emptydir .`; previously this returned an os error 22.
+
 ## v1.3.0 - 2025-12-16
 
 If `emptydir` looks at a directory but there's a reason the directory can't be deleted, it now prints the reason.
