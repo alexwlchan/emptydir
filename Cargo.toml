@@ -1,11 +1,13 @@
 [package]
 name = "emptydir"
-version = "1.3.0"
+version = "1.3.1"
 edition = "2021"
 
 [dependencies]
+assert_cmd = "2.1.2"
 clap = { version = "4.5.60", features = ["derive"] }
 colored = "3.1.1"
 num-format = "0.4.4"
+predicates = "3"
 tempfile = "3"
 walkdir = "2"
